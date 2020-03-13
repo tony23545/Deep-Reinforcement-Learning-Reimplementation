@@ -1,6 +1,7 @@
 import argparse
 import os
 import numpy as np 
+import _pickle as pickle 
 import gym
 from collections import namedtuple
 from itertools import count
@@ -43,6 +44,11 @@ class PPO():
 		self.training_step = 0
 		self.global_steps = 0
 		self.writer = SummaryWriter("log/" + self.args.env_name)
+
+		log_file = "log/" + self.args.env_name + "_PPO.pck"
+		if os.path.exists(log_file):
+			os.remove(log_file)
+		self.log_file = open(log_file, 'ab')
 		
 		if self.args.last_episode > 0:
 			self.load(self.args.last_episode)
@@ -117,8 +123,8 @@ class PPO():
 				print("Ep_i \t {}, the score is \t{:0.2f}".format(i_epoch, score))
 				self.evaluate(10, False)
 
-			if i_epoch % 100 == 0:
-				self.actor.decay_std()
+			# if i_epoch % 100 == 0:
+			# 	self.actor.decay_std()
 
 		self.env.close()
 		self.save(i_epoch+1)
@@ -142,20 +148,21 @@ class PPO():
 
 				total_rews += reward
 				count += 1
-				if count > 1000:
-					print("time out")
-					breaks
+				# if count > 1000:
+				# 	print("time out")
+				# 	breaks
 			rewards.append(total_rews)
 			if render:
 				print("total reward of this episode is " + str(total_rews))
 		rewards = np.array(rewards)
 		if not render:
-			self.writer.add_scalar('PPO_reward',rewards.mean(), self.global_steps)
+			pickle.dump((self.global_steps, rewards), self.log_file)
 		return rewards.max(), rewards.min(), rewards.mean()
 
 	def close(self):
 		self.env.close()
 		self.writer.close()
+		self.log_file.close()
 
 	def save(self, episode = None):
 		if episode == None:

@@ -14,6 +14,8 @@ from tensorboardX import SummaryWriter
 from utils.models import QNetwork, DeterministicPolicy
 from utils.ReplayBuffer import ReplayBuffer
 
+import _pickle as pickle 
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 class TD3():
@@ -45,8 +47,18 @@ class TD3():
 		self.global_steps = 0
 		self.writer = SummaryWriter("log/" + self.args.env_name)
 
+		log_file = "log/" + self.args.env_name + "_TD3.pck"
+		if os.path.exists(log_file):
+			os.remove(log_file)
+		self.log_file = open(log_file, 'ab')
+
 		if self.args.last_episode > 0:
 			self.load(self.args.last_episode)
+
+		# set reandom seed
+		self.env.seed(self.args.seed)
+		torch.manual_seed(args.seed)
+		np.random.seed(self.args.seed)
 
 	def update(self):
 		for it in range(self.args.update_iteration):
@@ -147,20 +159,21 @@ class TD3():
 				total_rews += reward
 				time_step += 1
 
-				if time_step > 1000:
-					print("time out")
-					break
+				# if time_step > 1000:
+				# 	print("time out")
+				# 	break
 			if render:
 				print("total reward of this episode is " + str(total_rews))
 			rewards.append(total_rews)
 		rewards = np.array(rewards)
 		if not render:
-			self.writer.add_scalar('TD3_reward',rewards.mean(), self.global_steps)
+			pickle.dump((self.global_steps, rewards), self.log_file)
 		return rewards.max(), rewards.min(), rewards.mean()
 
 	def close(self):
 		self.env.close()
 		self.writer.close()
+		self.log_file.close()
 
 	def load(self, episode = None):
 		if episode == None:

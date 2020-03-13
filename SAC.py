@@ -3,6 +3,7 @@ from itertools import count
 
 import os, sys, random
 import numpy as np
+import _pickle as pickle 
 
 import gym
 import torch
@@ -40,6 +41,10 @@ class SAC():
 
 		self.global_steps = 0
 		self.writer = SummaryWriter("log/" + self.args.env_name)
+		log_file = "log/" + self.args.env_name + "_SAC.pck"
+		if os.path.exists(log_file):
+			os.remove(log_file)
+		self.log_file = open(log_file, 'ab')
 
 		if self.args.last_episode > 0:
 			self.load(self.args.last_episode)
@@ -136,20 +141,21 @@ class SAC():
 				total_rews += reward
 				time_step += 1
 
-				if time_step > 1000:
-					print("time out")
-					break
+				# if time_step > 1000:
+				# 	print("time out")
+				# 	break
 			if render:
 				print("total reward of this episode is " + str(total_rews))
 			rewards.append(total_rews)
 		rewards = np.array(rewards)
 		if not render:
-			self.writer.add_scalar('SAC_reward',rewards.mean(), self.global_steps)
+			pickle.dump((self.global_steps, rewards), self.log_file)
 		return rewards.max(), rewards.min(), rewards.mean()
 
 	def close(self):
 		self.env.close()
 		self.writer.close()
+		self.log_file.close()
 
 	def save(self, episode):
 		if episode == None:

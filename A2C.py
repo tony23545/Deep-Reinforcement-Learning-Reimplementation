@@ -47,6 +47,9 @@ class A2C():
 			except:
 				print("can't find last checkpoint file")
 
+		# set random seed
+		
+
 	def compute_returns(self, next_value, rewards, dones):
 		R = next_value
 		returns = []

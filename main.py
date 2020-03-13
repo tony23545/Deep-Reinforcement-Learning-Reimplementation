@@ -14,7 +14,7 @@ parser.add_argument('--mode', default='train')
 parser.add_argument('--num_envs', default=8)
 
 parser.add_argument('--lr', default=0.001, type=float)
-parser.add_argument('--gamma', default=1.0, type=float)
+parser.add_argument('--gamma', default=0.99, type=float)
 parser.add_argument('--tau',  default=0.005, type=float) # target smoothing coefficient
 parser.add_argument('--alpha', default=0.2, type=float)
 
@@ -29,6 +29,9 @@ parser.add_argument('--policy_delay', default=2)
 
 parser.add_argument('--update_iteration', default=10, type=int)
 parser.add_argument('--batch_size', default=64, type=int) # mini batch size
+
+# experiment relater
+parser.add_argument('--seed', default=1, type=int)
 
 args = parser.parse_args()
 
