@@ -1,0 +1,6 @@
+numpy
+pandas
+seaborn==0.10.0
+gym==0.10.11
+torch==1.4.0
+tensorboardX
