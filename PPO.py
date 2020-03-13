@@ -123,8 +123,8 @@ class PPO():
 				print("Ep_i \t {}, the score is \t{:0.2f}".format(i_epoch, score))
 				self.evaluate(10, False)
 
-			# if i_epoch % 100 == 0:
-			# 	self.actor.decay_std()
+			if i_epoch % 50 == 0:
+				self.actor.decay_std()
 
 		self.env.close()
 		self.save(i_epoch+1)

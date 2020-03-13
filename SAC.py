@@ -133,7 +133,7 @@ class SAC():
 				state = torch.FloatTensor([state])
 				with torch.no_grad():
 					# use the mean action
-					_, _, action = self.actor.sample(state)
+					action, _, _ = self.actor.sample(state)
 					action = action.cpu().detach().numpy()[0]
 				if render:
 					self.env.render()
