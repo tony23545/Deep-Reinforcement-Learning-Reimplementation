@@ -119,8 +119,7 @@ class TD3():
 			state = self.env.reset()
 			ep_r = 0
 			for t in count():
-				state = torch.FloatTensor([state])
-				action, _, _ = self.actor.sample(state)
+				action, _, _ = self.actor.sample(torch.FloatTensor([state]).to(device))
 				action = action.cpu().detach().numpy()[0]
 
 				next_state, reward, done, info = self.env.step(action)
@@ -148,10 +147,9 @@ class TD3():
 			time_step = 0
 			state = self.env.reset()
 			while not done:
-				state = torch.FloatTensor([state])
 				with torch.no_grad():
 					# use the mean action
-					_, _, action = self.actor.sample(state)
+					_, _, action = self.actor.sample(torch.FloatTensor([state]).to(device))
 					action = action.cpu().detach().numpy()[0]
 				if render:
 					self.env.render()

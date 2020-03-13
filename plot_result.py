@@ -1,8 +1,8 @@
 import _pickle as pickle 
 import numpy as np 
 import seaborn as sns
-import matplotlib  
-matplotlib.use('Qt5Agg')
+# import matplotlib  
+# matplotlib.use('Qt5Agg')
 from matplotlib import pyplot as plt
 import argparse
 import os
