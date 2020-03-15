@@ -22,7 +22,7 @@ parser.add_argument('--capacity', default=50000, type=int) # replay buffer size
 
 parser.add_argument('--max_episode', default=2000, type=int) # num of games
 parser.add_argument('--last_episode', default=0, type=int)
-parser.add_argument('--max_length_trajectory', default=200, type=int)
+parser.add_argument('--max_length_trajectory', default=5000, type=int)
 parser.add_argument('--print_log', default=50, type=int)
 parser.add_argument('--exploration_noise', default=0.1)
 parser.add_argument('--policy_delay', default=2)

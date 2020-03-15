@@ -131,7 +131,7 @@ class SAC():
 			while not done:
 				with torch.no_grad():
 					# use the mean action
-					action, _, _ = self.actor.sample(state)
+					action, _, _ = self.actor.sample(torch.FloatTensor([state]).to(device))
 					action = action.cpu().detach().numpy()[0]
 				if render:
 					self.env.render()
