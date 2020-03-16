@@ -13,15 +13,14 @@ from tensorboardX import SummaryWriter
 
 from utils.models import QNetwork, DeterministicPolicy
 from utils.ReplayBuffer import ReplayBuffer
-
+from algorithms import algorithms
 import _pickle as pickle 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-class TD3():
+class TD3(algorithms):
 	def __init__(self, args):
-		self.args = args
-		self.env = gym.make(self.args.env_name)
+		super().__init__(args)
 		state_dim = self.env.observation_space.shape[0]
 		action_dim = self.env.action_space.shape[0]
 
@@ -45,20 +44,9 @@ class TD3():
 		self.num_actor_update_iteration = 0
 		self.num_training = 0
 		self.global_steps = 0
-		self.writer = SummaryWriter("log/" + self.args.env_name)
-
-		log_file = "log/" + self.args.env_name + "_TD3.pck"
-		if os.path.exists(log_file):
-			os.remove(log_file)
-		self.log_file = open(log_file, 'ab')
 
 		if self.args.last_episode > 0:
 			self.load(self.args.last_episode)
-
-		# set reandom seed
-		self.env.seed(self.args.seed)
-		torch.manual_seed(args.seed)
-		np.random.seed(self.args.seed)
 
 	def update(self):
 		for it in range(self.args.update_iteration):
@@ -121,7 +109,6 @@ class TD3():
 			for t in count():
 				action, _, _ = self.actor.sample(torch.FloatTensor([state]).to(device))
 				action = action.cpu().detach().numpy()[0]
-
 				next_state, reward, done, info = self.env.step(action)
 				self.global_steps += 1
 
@@ -131,7 +118,7 @@ class TD3():
 
 				if done or t > self.args.max_length_trajectory:
 					if i % self.args.print_log == 0:
-						print("Ep_i \t {}, the ep_r is \t{:0.2f}, the step is \t{}".format(i, ep_r, t))
+						print("Ep_i \t {}, the ep_r is \t{:0.2f}, the step is \t{}, global_steps is {}".format(i, ep_r, t, self.global_steps))
 						self.evaluate(10, False)
 					break
 
@@ -168,16 +155,8 @@ class TD3():
 			pickle.dump((self.global_steps, rewards), self.log_file)
 		return rewards.max(), rewards.min(), rewards.mean()
 
-	def close(self):
-		self.env.close()
-		self.writer.close()
-		self.log_file.close()
-
 	def load(self, episode = None):
-		if episode == None:
-			file_name = "weights/" + self.args.env_name + "_TD3_checkpoint.pt"
-		else:
-			file_name = "weights/" + self.args.env_name + "_TD3_checkpoint_" + str(episode) + ".pt"
+		file_name = self.weights_file(episode)
 		checkpoint = torch.load(file_name)
 		self.actor.load_state_dict(checkpoint['actor'])
 		self.actor_target.load_state_dict(checkpoint['actor_target'])
@@ -188,10 +167,7 @@ class TD3():
 		print("successfully load model from " + file_name)
 
 	def save(self, episode = None):
-		if episode == None:
-			file_name = "weights/" + self.args.env_name + "_TD3_checkpoint.pt"
-		else:
-			file_name = "weights/" + self.args.env_name + "_TD3_checkpoint_" + str(episode) + ".pt"
+		file_name = self.weights_file(episode)
 		torch.save({'actor' : self.actor.state_dict(),
 					'critic_1' : self.critic_1.state_dict(),
 					'critic_2' : self.critic_2.state_dict(),

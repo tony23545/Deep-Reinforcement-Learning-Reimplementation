@@ -52,6 +52,7 @@ class QNetwork(nn.Module):
         x = self.linear3(x)
         return x
 
+
 class GaussianFixstdPolicy(nn.Module):
     def __init__(self, num_inputs, num_actions, hidden_dim, action_space=None):
         super(GaussianFixstdPolicy, self).__init__()
@@ -62,9 +63,7 @@ class GaussianFixstdPolicy(nn.Module):
         self.mean_linear = nn.Linear(hidden_dim, num_actions)
         self.apply(weights_init_)
 
-        log_std = -0.5 * np.ones(num_actions, dtype=np.float32)
-        #self.log_std = torch.FloatTensor(log_std)
-        self.log_std = torch.nn.Parameter(torch.as_tensor(log_std), requires_grad=False)
+        self.action_log_std = nn.Parameter(torch.ones(1, num_actions) * 0.5)
 
         # action rescaling
         if action_space is None:
@@ -77,36 +76,39 @@ class GaussianFixstdPolicy(nn.Module):
                 (action_space.high + action_space.low) / 2.)
 
     def forward(self, state):
-        x = F.leaky_relu(self.linear1(state))
-        x = F.leaky_relu(self.linear2(x))
+        x = F.tanh(self.linear1(state))
+        x = F.tanh(self.linear2(x))
         mean = self.mean_linear(x)
         return mean
 
     def sample(self, state):
         mean = self.forward(state)
-        std = torch.exp(self.log_std)
-        normal = Normal(mean, std)
-        x_t = normal.rsample()  # for reparameterization trick (mean + std * N(0,1))
-        y_t = torch.tanh(x_t)
-        action = y_t * self.action_scale + self.action_bias
-        log_prob = normal.log_prob(x_t)
-        mean = torch.tanh(mean) * self.action_scale + self.action_bias
-        return action, log_prob, mean
+        action_log_std = self.action_log_std.expand_as(mean)
+        action_std = torch.exp(action_log_std)
+        #print(action_std)
+        #print(action_std)
+        normal = Normal(mean, action_std)
+        x_t = normal.sample()  # for reparameterization trick (mean + std * N(0,1))
+        # y_t = torch.tanh(x_t)
+        # action = y_t * self.action_scale + self.action_bias
+        log_prob = normal.log_prob(x_t).sum(-1, keepdim=True)
+        # mean = torch.tanh(mean) * self.action_scale + self.action_bias
+        return x_t, log_prob, mean
 
     # for ppo
     def action_log_prob(self, state, action):
         mean = self.forward(state)
-        std = torch.exp(self.log_std)
+        #std = torch.exp(self.log_std)
+        action_log_std = self.action_log_std.expand_as(mean)
+        action_std = torch.exp(action_log_std)
 
-        normal = Normal(mean, std)
-        action = (action - self.action_bias) / self.action_scale
-        # inverse tanh
-        action = 0.5*torch.log((1+action+0.00000001)/(1-action + 0.00000001))
-        log_prob = normal.log_prob(action)
-        return log_prob
-
-    def decay_std(self):
-        self.log_std.data = self.log_std.data * 0.95
+        normal = Normal(mean, action_std)
+        # action = (action - self.action_bias) / self.action_scale
+        # # inverse tanh
+        # action = 0.5*torch.log((1+action+0.00000001)/(1-action + 0.00000001))
+        log_prob = normal.log_prob(action).sum(-1, keepdim=True)
+        entropy = normal.entropy()
+        return log_prob, entropy
 
 class GaussianPolicy(nn.Module):
     def __init__(self, num_inputs, num_actions, hidden_dim, action_space=None):

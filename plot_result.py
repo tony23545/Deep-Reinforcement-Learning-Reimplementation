@@ -1,8 +1,8 @@
 import _pickle as pickle 
 import numpy as np 
 import seaborn as sns
-# import matplotlib  
-# matplotlib.use('Qt5Agg')
+import matplotlib  
+matplotlib.use('Qt5Agg')
 from matplotlib import pyplot as plt
 import argparse
 import os
@@ -19,7 +19,7 @@ all_steps = []
 names = []
 for log in log_files:
 	if log.endswith(".pck"):
-		names.append(log.split('.')[0].split('/')[1])
+		names.append(log.split('.')[0].split('/')[2])
 		file = open(log, 'rb')
 		steps = []
 		results = []

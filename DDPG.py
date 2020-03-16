@@ -14,13 +14,13 @@ from tensorboardX import SummaryWriter
 
 from utils.models import QNetwork, DeterministicPolicy
 from utils.ReplayBuffer import ReplayBuffer
+from algorithms import algorithms
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-class DDPG(object):
+class DDPG(algorithms):
 	def __init__(self, args):
-		self.args = args
-		self.env = gym.make(self.args.env_name)
+		super().__init__(args)
 		state_dim = self.env.observation_space.shape[0]
 		action_dim = self.env.action_space.shape[0]
 
@@ -39,11 +39,6 @@ class DDPG(object):
 		self.num_actor_update_iteration = 0
 		self.num_training = 0
 		self.global_steps = 0
-		self.writer = SummaryWriter("log/" + self.args.env_name)
-		log_file = "log/" + self.args.env_name + "_DDPG.pck"
-		if os.path.exists(log_file):
-			os.remove(log_file)
-		self.log_file = open(log_file, 'ab')
 
 		if self.args.last_episode > 0:
 			self.load(self.args.last_episode)
@@ -94,8 +89,7 @@ class DDPG(object):
 			state = self.env.reset()
 			ep_r = 0
 			for t in count():
-				state = torch.FloatTensor([state])
-				action, _, _ = self.actor.sample(state)
+				action, _, _ = self.actor.sample(torch.FloatTensor([state]).to(device))
 				action = action.cpu().detach().numpy()[0]
 
 				next_state, reward, done, info = self.env.step(action)
@@ -106,14 +100,13 @@ class DDPG(object):
 
 				if done or t > self.args.max_length_trajectory:
 					if i % self.args.print_log == 0:
-						print("Ep_i \t {}, the ep_r is \t{:0.2f}, the step is \t{}".format(i, ep_r, t))
+						print("Ep_i \t {}, the ep_r is \t{:0.2f}, the step is \t{}, global_steps is {}".format(i, ep_r, t, self.global_steps))
 						self.evaluate(10, False)
 					break
 
 			if len(self.replay_buffer.storage) >= self.args.capacity - 1:
 				self.update()
 		self.save(i+1)
-
 
 	def evaluate(self, number = 1, render = True):
 		rewards = []
@@ -123,10 +116,9 @@ class DDPG(object):
 			done = False
 			state = self.env.reset()
 			while not done:
-				state = torch.FloatTensor([state])
 				with torch.no_grad():
 					# use the mean action
-					_, _, action = self.actor.sample(state)
+					_, _, action = self.actor.sample(torch.FloatTensor([state]).to(device))
 					action = action.cpu().detach().numpy()[0]
 				if render:
 					self.env.render()
@@ -134,9 +126,6 @@ class DDPG(object):
 				total_rews += reward
 				time_step += 1
 
-				# if time_step > 1000:
-				# 	print("time out")
-				# 	break
 			if render:
 				print("total reward of this episode is " + str(total_rews))
 			rewards.append(total_rews)
@@ -145,16 +134,8 @@ class DDPG(object):
 			pickle.dump((self.global_steps, rewards), self.log_file)
 		return rewards.max(), rewards.min(), rewards.mean()
 
-	def close(self):
-		self.env.close()
-		self.writer.close()
-		self.log_file.close()
-
 	def load(self, episode = None):
-		if episode == None:
-			file_name = "weights/" + self.args.env_name + "_DDPG_checkpoint.pt"
-		else:
-			file_name = "weights/" + self.args.env_name + "_DDPG_checkpoint_" + str(episode) + ".pt"
+		file_name = self.weights_file(episode)
 		checkpoint = torch.load(file_name)
 		self.actor.load_state_dict(checkpoint['actor'])
 		self.actor_target.load_state_dict(checkpoint['actor_target'])
@@ -163,10 +144,7 @@ class DDPG(object):
 		print("successfully load model from " + file_name)
 
 	def save(self, episode = None):
-		if episode == None:
-			file_name = "weights/" + self.args.env_name + "_DDPG_checkpoint.pt"
-		else:
-			file_name = "weights/" + self.args.env_name + "_DDPG_checkpoint_" + str(episode) + ".pt"
+		file_name = self.weights_file(episode)
 		torch.save({'actor' : self.actor.state_dict(),
 					'critic' : self.critic.state_dict(),
 					'actor_target' : self.actor_target.state_dict(),
