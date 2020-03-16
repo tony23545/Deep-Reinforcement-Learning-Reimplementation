@@ -135,7 +135,7 @@ class GaussianPolicy(nn.Module):
         x = F.relu(self.linear2(x))
         mean = self.mean_linear(x)
         log_std = self.log_std_linear(x)
-        log_std = torch.clamp(log_std, min=LOG_SIG_MIN, max=LOG_SIG_MAX)
+        #log_std = torch.clamp(log_std, min=LOG_SIG_MIN, max=LOG_SIG_MAX)
         return mean, log_std
 
     def sample(self, state, entropy = True):
@@ -189,7 +189,7 @@ class DeterministicPolicy(nn.Module):
     def sample(self, state):
         mean = self.forward(state)
         noise = self.noise.normal_(0., std=0.1)
-        noise = noise.clamp(-0.25, 0.25)
+        noise = noise.clamp(-0.5, 0.5)
         action = mean + noise
         return action, torch.tensor(0.), mean
 
