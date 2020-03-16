@@ -47,7 +47,10 @@ class A2C():
 			except:
 				print("can't find last checkpoint file")
 
-		# set random seed
+		# set reandom seed
+		self.env.seed(self.args.seed)
+		torch.manual_seed(args.seed)
+		np.random.seed(self.args.seed)
 		
 
 	def compute_returns(self, next_value, rewards, dones):

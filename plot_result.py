@@ -19,7 +19,7 @@ all_steps = []
 names = []
 for log in log_files:
 	if log.endswith(".pck"):
-		names.append(log.split('.')[0].split('/')[1])
+		names.append(log.split('.')[0].split('/')[2])
 		file = open(log, 'rb')
 		steps = []
 		results = []

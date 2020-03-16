@@ -14,13 +14,13 @@ from tensorboardX import SummaryWriter
 
 from utils.models import QNetwork, GaussianPolicy
 from utils.ReplayBuffer import ReplayBuffer
+from algorithms import algorithms
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-class SAC():
+class SAC(algorithms):
 	def __init__(self, args):
-		self.args = args
-		self.env = gym.make(self.args.env_name)
+		super().__init__(args)
 		state_dim = self.env.observation_space.shape[0]
 		action_dim = self.env.action_space.shape[0]
 
@@ -40,14 +40,6 @@ class SAC():
 		self.replay_buffer = ReplayBuffer(self.args.capacity)
 
 		self.global_steps = 0
-		self.writer = SummaryWriter("log/" + self.args.env_name)
-		log_file = "log/" + self.args.env_name + "_SAC.pck"
-		if os.path.exists(log_file):
-			os.remove(log_file)
-		self.log_file = open(log_file, 'ab')
-
-		if self.args.last_episode > 0:
-			self.load(self.args.last_episode)
 
 	def update(self):
 		for it in range(self.args.update_iteration):
@@ -111,7 +103,7 @@ class SAC():
 
 				if done or t > self.args.max_length_trajectory:
 					if i % self.args.print_log == 0:
-						print("Ep_i \t {}, the ep_r is \t{:0.2f}, the step is \t{}".format(i, ep_r, t))
+						print("Ep_i \t {}, the ep_r is \t{:0.2f}, the step is \t{}, global_steps is {}".format(i, ep_r, t, self.global_steps))
 						self.evaluate(10, False)
 					ep_r = 0
 					break
@@ -139,9 +131,6 @@ class SAC():
 				total_rews += reward
 				time_step += 1
 
-				# if time_step > 1000:
-				# 	print("time out")
-				# 	break
 			if render:
 				print("total reward of this episode is " + str(total_rews))
 			rewards.append(total_rews)
@@ -150,16 +139,8 @@ class SAC():
 			pickle.dump((self.global_steps, rewards), self.log_file)
 		return rewards.max(), rewards.min(), rewards.mean()
 
-	def close(self):
-		self.env.close()
-		self.writer.close()
-		self.log_file.close()
-
 	def save(self, episode):
-		if episode == None:
-			file_name = "weights/" + self.args.env_name + "_SAC_checkpoint.pt"
-		else:
-			file_name = "weights/" + self.args.env_name + "_SAC_checkpoint_" + str(episode) + ".pt"
+		file_name = self.weights_file(episode)
 		torch.save({'actor' : self.actor.state_dict(),
 					'critic_1' : self.critic_1.state_dict(),
 					'critic_2' : self.critic_2.state_dict(),
@@ -168,10 +149,7 @@ class SAC():
 		print("save model to " + file_name)
 
 	def load(self, episode):
-		if episode == None:
-			file_name = "weights/" + self.args.env_name + "_SAC_checkpoint.pt"
-		else:
-			file_name = "weights/" + self.args.env_name + "_SAC_checkpoint_" + str(episode) + ".pt"
+		file_name = self.weights_file(episode)
 		checkpoint = torch.load(file_name)
 		self.actor.load_state_dict(checkpoint['actor'])
 		self.critic_1.load_state_dict(checkpoint['critic_1'])

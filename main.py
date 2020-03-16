@@ -18,7 +18,7 @@ parser.add_argument('--gamma', default=0.99, type=float)
 parser.add_argument('--tau',  default=0.005, type=float) # target smoothing coefficient
 parser.add_argument('--alpha', default=0.2, type=float)
 
-parser.add_argument('--capacity', default=50000, type=int) # replay buffer size
+parser.add_argument('--capacity', default=20000, type=int) # replay buffer size
 
 parser.add_argument('--max_episode', default=2000, type=int) # num of games
 parser.add_argument('--last_episode', default=0, type=int)
@@ -31,8 +31,8 @@ parser.add_argument('--update_iteration', default=10, type=int)
 parser.add_argument('--batch_size', default=64, type=int) # mini batch size
 
 # experiment relater
-parser.add_argument('--seed', default=1, type=int)
-
+parser.add_argument('--seed', default=10, type=int)
+parser.add_argument('--exp_name', default='experiment')
 args = parser.parse_args()
 
 def main():
@@ -50,8 +50,7 @@ def main():
 	if args.mode == 'train':
 		agent.train()
 	elif args.mode == 'eval':
-		a, b, c = agent.evaluate(5)
-		print(a, b, c)
+		agent.evaluate(5)
 	agent.close()
 
 if __name__ == '__main__':
