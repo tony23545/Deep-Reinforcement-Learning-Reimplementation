@@ -1,3 +1,4 @@
 *.pt
 log/
 weights/
+__pycache__/
