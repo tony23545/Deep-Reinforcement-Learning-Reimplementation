@@ -8,10 +8,10 @@ class algorithms():
 		self.args = args
 		self.env = gym.make(self.args.env_name)
 
-		log_file = "log/" + self.args.env_name + "/" + self.args.model + "/"
+		log_file = os.path.join("log", self.args.env_name, self.args.model)
 		if not os.path.exists(log_file):
 			os.mkdir(log_file)
-		log_file = log_file + self.args.exp_name + ".pck"
+		log_file = os.path.join(log_file, self.args.exp_name + ".pck")
 		if self.args.mode == 'train' and os.path.exists(log_file):
 			os.remove(log_file)
 		self.log_file = open(log_file, 'ab')
@@ -22,13 +22,14 @@ class algorithms():
 		np.random.seed(self.args.seed)
 
 	def weights_file(self, episode = None):
+		file_name = os.path.join("weights", self.args.env_name, self.args.model)
 		file_name = "weights/" + self.args.env_name + "/" + self.args.model + "/"
 		if not os.path.exists(file_name):
 			os.mkdir(file_name)
 		if episode == None:
-			file_name = file_name + self.args.exp_name + ".pt"
+			file_name = os.path.join(file_name, self.args.exp_name + ".pt")
 		else:
-			file_name = file_name + self.args.exp_name + "_" + str(episode) + ".pt"
+			file_name = os.path.join(file_name, self.args.exp_name + "_" + str(episode) + ".pt")
 		return file_name
 
 	def close(self):

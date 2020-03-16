@@ -153,7 +153,7 @@ class TD3(algorithms):
 		rewards = np.array(rewards)
 		if not render:
 			pickle.dump((self.global_steps, rewards), self.log_file)
-		return rewards.max(), rewards.min(), rewards.mean()
+		print("mean reward {}, max reward {}".format(rewards.mean(), rewards.max()))
 
 	def load(self, episode = None):
 		file_name = self.weights_file(episode)

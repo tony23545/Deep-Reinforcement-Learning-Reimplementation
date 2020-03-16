@@ -190,8 +190,8 @@ class DeterministicPolicy(nn.Module):
 
     def sample(self, state):
         mean = self.forward(state)
-        noise = self.noise.normal_(0., std=0.1)
-        noise = noise.clamp(-0.25, 0.25)
+        noise = self.noise.normal_(0., std=0.2)
+        noise = noise.clamp(-0.5, 0.5)
         action = mean + noise
         return action, torch.tensor(0.), mean
 
