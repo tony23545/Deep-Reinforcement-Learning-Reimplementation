@@ -153,7 +153,7 @@ class PPO(algorithms):
 				print("total reward of this episode is " + str(total_rews))
 		rewards = np.array(rewards)
 		if not render:
-			pickle.dump((self.global_steps, rewards), self.log_file)
+			pickle.dump((self.counter, rewards), self.log_file)
 		self.actor.train()
 		print("mean reward {}, max reward {}".format(rewards.mean(), rewards.max()))
 

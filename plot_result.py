@@ -19,7 +19,7 @@ all_steps = []
 names = []
 for log in log_files:
 	if log.endswith(".pck"):
-		names.append(log.split('.')[0].split('/')[2])
+		names.append(log.split('.')[0].split('/')[-1])
 		file = open(log, 'rb')
 		steps = []
 		results = []
@@ -37,8 +37,12 @@ for log in log_files:
 for i in range(len(all_result)):
 	steps = all_steps[i]
 	results = all_result[i]
+	import IPython
+	IPython.embed()
 	df = pd.DataFrame(results.transpose())
 	df.columns = steps
-	sns.lineplot(x = 'variable', y = 'value', data = df.melt())
+	df = df.melt()
+	df = df.rename(columns={'variable': 'time_step', 'value' : 'reward'})
+	sns.lineplot(x = 'time_step', y = 'reward', data = df)
 plt.legend(names)
 plt.show()

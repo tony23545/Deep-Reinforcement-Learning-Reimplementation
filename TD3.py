@@ -122,7 +122,7 @@ class TD3(algorithms):
 						self.evaluate(10, False)
 					break
 
-			if len(self.replay_buffer.storage) >= self.args.capacity - 1:
+			if len(self.replay_buffer.storage) >= self.args.capacity * 0.3 - 1:
 				self.update()
 		self.save(i+1)
 
