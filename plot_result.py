@@ -37,8 +37,6 @@ for log in log_files:
 for i in range(len(all_result)):
 	steps = all_steps[i]
 	results = all_result[i]
-	import IPython
-	IPython.embed()
 	df = pd.DataFrame(results.transpose())
 	df.columns = steps
 	df = df.melt()

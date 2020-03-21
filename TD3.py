@@ -24,19 +24,19 @@ class TD3(algorithms):
 		state_dim = self.env.observation_space.shape[0]
 		action_dim = self.env.action_space.shape[0]
 
-		self.actor = DeterministicPolicy(state_dim, action_dim, 64, self.env.action_space).to(device)
+		self.actor = DeterministicPolicy(state_dim, action_dim, self.args.hidden_dim, self.env.action_space).to(device)
 		self.actor_optimizer = optim.Adam(self.actor.parameters(), self.args.lr)
-		self.actor_target = DeterministicPolicy(state_dim, action_dim, 64, self.env.action_space).to(device)
+		self.actor_target = DeterministicPolicy(state_dim, action_dim, self.args.hidden_dim, self.env.action_space).to(device)
 		self.actor_target.load_state_dict(self.actor.state_dict())
 
-		self.critic_1 = QNetwork(state_dim, action_dim, 64).to(device)
+		self.critic_1 = QNetwork(state_dim, action_dim, self.args.hidden_dim).to(device)
 		self.critic_optimizer_1 = optim.Adam(self.critic_1.parameters(), self.args.lr)
-		self.critic_target_1 = QNetwork(state_dim, action_dim, 64).to(device)
+		self.critic_target_1 = QNetwork(state_dim, action_dim, self.args.hidden_dim).to(device)
 		self.critic_target_1.load_state_dict(self.critic_1.state_dict())
 
-		self.critic_2 = QNetwork(state_dim, action_dim, 64).to(device)
+		self.critic_2 = QNetwork(state_dim, action_dim, self.args.hidden_dim).to(device)
 		self.critic_optimizer_2 = optim.Adam(self.critic_2.parameters(), self.args.lr)
-		self.critic_target_2 = QNetwork(state_dim, action_dim, 64).to(device)
+		self.critic_target_2 = QNetwork(state_dim, action_dim, self.args.hidden_dim).to(device)
 		self.critic_target_2.load_state_dict(self.critic_2.state_dict())
 
 		self.replay_buffer = ReplayBuffer(self.args.capacity)
